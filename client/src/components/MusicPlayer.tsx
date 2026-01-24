@@ -159,7 +159,7 @@ export default function MusicPlayer({ songs, onRemoveSong }: MusicPlayerProps) {
     if (!isVolumeAdjustMode) return;
     const handleWheel = (e: WheelEvent) => {
       e.preventDefault();
-      const delta = e.deltaY < 0 ? 0.05 : -0.05;
+      const delta = e.deltaY < 0 ? 0.02 : -0.02;
       const newVolume = Math.max(0, Math.min(1, volume + delta));
       setVolume(newVolume);
       if (newVolume > 0) setIsMuted(false);
@@ -557,7 +557,8 @@ export default function MusicPlayer({ songs, onRemoveSong }: MusicPlayerProps) {
               max={duration || 100}
               step={1}
               onValueChange={handleSeek}
-              className="cursor-pointer"
+              // THÊM: interactive-slider
+              className="cursor-pointer interactive-slider h-5"
             />
             <div className="flex justify-between text-xs font-medium text-white/40">
               <span>{formatTime(currentTime)}</span>
@@ -628,15 +629,16 @@ export default function MusicPlayer({ songs, onRemoveSong }: MusicPlayerProps) {
                 value={[isMuted ? 0 : volume]}
                 max={1}
                 step={0.01}
-                onValueChange={v => {
+                onValueChange={(v) => {
                   setVolume(v[0]);
                   if (v[0] > 0) setIsMuted(false);
                 }}
-                onPointerDown={e => {
+                onPointerDown={(e) => {
                   e.stopPropagation();
                   setIsVolumeAdjustMode(true);
                 }}
-                className="w-full"
+                // THÊM: interactive-slider
+                className="w-full interactive-slider h-5"
               />
               {isVolumeAdjustMode && (
                 <div className="absolute -inset-2 border-2 border-white/50 rounded-lg pointer-events-none animate-pulse" />
@@ -645,7 +647,60 @@ export default function MusicPlayer({ songs, onRemoveSong }: MusicPlayerProps) {
           </div>
         </div>
       </div>
-      <style>{`.glass-panel { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); } .glass-button { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); transition: all 0.3s; } .glass-button:hover { background: rgba(255, 255, 255, 0.2); }`}</style>
+      <style>{`
+  .glass-panel {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  .glass-button {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    transition: all 0.3s;
+  }
+  .glass-button:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+
+  /* --- FIX TUA CHẬM & HOVER PHỒNG TO --- */
+
+  /* 1. Thiết lập transition có chọn lọc */
+  /* Thay vì 'all', ta chỉ liệt kê những thứ cần mượt (height, transform, border) */
+  /* Tuyệt đối KHÔNG transition 'width' của thanh Range hoặc 'left' của Thumb */
+  .interactive-slider span {
+    transition-property: height, transform, box-shadow, border-width; 
+    transition-duration: 0.2s; /* Giảm xuống 0.2s cho nhanh hơn chút nữa */
+    transition-timing-function: ease-out;
+  }
+
+  /* Riêng cục Thumb (cục tròn) cần transition cả width/height để phồng to mượt */
+  .interactive-slider span[role="slider"] {
+    transition-property: width, height, transform, box-shadow, border;
+    transition-duration: 0.2s;
+    transition-timing-function: ease-out;
+    /* Quan trọng: KHÔNG transition 'left', 'right' để khi click nó nhảy ngay lập tức */
+  }
+
+  /* 2. Hiệu ứng Hover cho thanh Track (Phồng lên) */
+  .interactive-slider:hover span.grow {
+    height: 10px !important; 
+    border-radius: 999px;
+  }
+
+  /* 3. Hiệu ứng Hover cho cục Thumb (To lên) */
+  .interactive-slider:hover span[role="slider"] {
+    width: 20px !important;
+    height: 20px !important;
+    transform: scale(1.2);
+    border: 2px solid white;
+    box-shadow: 0 0 10px rgba(255,255,255,0.5);
+  }
+  
+  /* Đảm bảo thứ tự hiển thị */
+  .interactive-slider span[role="slider"] {
+    z-index: 10;
+  }
+`}</style>
     </div>
   );
 }
