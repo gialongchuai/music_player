@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import MusicPlayer, { Song } from "@/components/MusicPlayer";
 import SongImporter from "@/components/SongImporter";
-import { Plus } from "lucide-react";
+import { Plus, Play } from "lucide-react";
 
 // --- HELPERS CHO INDEXED DB ---
 const DB_NAME = "MusicPlayerDB";
@@ -59,7 +59,7 @@ export default function Home() {
       if (savedSongs) {
         try {
           const parsedSongs: Song[] = JSON.parse(savedSongs);
-          
+
           // Duyệt qua các bài hát, nếu là bài local thì load blob từ DB và tạo URL mới
           const restoredSongs = await Promise.all(
             parsedSongs.map(async (song) => {
@@ -127,26 +127,96 @@ export default function Home() {
   const handleClearSongs = async () => {
     setSongs([]);
     localStorage.removeItem("musicPlayerSongs");
-    
+
     // Clear toàn bộ DB
     const db = await openDB();
     const tx = db.transaction(STORE_NAME, "readwrite");
     tx.objectStore(STORE_NAME).clear();
   };
 
+  // Function để thêm nhanh bài hát gợi ý
+  const handleAddSuggestedSong = async () => {
+    const suggestedSong: Song = {
+      id: Date.now(),
+      title: "golden hour",
+      artist: "JVKE",
+      cover: "https://img.youtube.com/vi/PEM0Vs8jf1w/hqdefault.jpg",
+      url: "https://www.youtube.com/embed/PEM0Vs8jf1w",
+      duration: "0:00",
+      type: "youtube",
+      youtubeId: "PEM0Vs8jf1w",
+    };
+
+    setIsImporterOpen(false);
+    handleAddSongs([suggestedSong]);
+  };
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4">
       {songs.length === 0 ? (
         <div className="glass-panel rounded-3xl p-8 text-center max-w-md w-full space-y-6">
-          <div className="text-6xl">🎵</div>
+          <div className="text-6xl">🎶</div>
           <h1 className="text-2xl font-bold text-white">
-            Chào mừng đến với <br />
+            Chào cậu đến với <br />
             Music Player
           </h1>
-          <p className="text-white/60">
-            Bạn chưa có bài hát nào. Hãy thêm bài hát bằng cách tải lên MP3 hoặc
-            nhập URL YouTube.
+          <p className="text-white/80">
+            Cậu chưa có bài hát nào. Hãy thêm bài hát bằng cách nhập URL YouTube hoặc tải lên MP3.
           </p>
+          <br />
+          {/* Gợi ý bài hát */}
+          <div className="space-y-3">
+            <p className="text-white/80">
+              ☁️ Gợi ý cho cậu nè ☁️
+            </p>
+
+            {/* Card gợi ý JVKE - golden hour */}
+            <div
+              onClick={handleAddSuggestedSong}
+              className="group relative bg-gradient-to-br from-yellow-500/20 to-orange-600/20 border border-yellow-500/30 rounded-2xl p-4 cursor-pointer hover:from-yellow-500/30 hover:to-orange-600/30 hover:border-yellow-400/50 hover:scale-[1.02] transition-all duration-300 hover:shadow-[0_0_30px_rgba(234,179,8,0.3)]"
+            >
+              <div className="flex items-center gap-4">
+                {/* Thumbnail */}
+                <div className="relative w-20 h-20 rounded-xl overflow-hidden flex-shrink-0 shadow-lg">
+                  <img
+                    src="https://img.youtube.com/vi/PEM0Vs8jf1w/hqdefault.jpg"
+                    alt="golden hour"
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                  />
+                  <div className="absolute inset-0 bg-black/20 group-hover:bg-black/0 transition-colors" />
+                  {/* Play icon overlay */}
+                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <div className="w-10 h-10 bg-white/90 rounded-full flex items-center justify-center shadow-lg">
+                      <Play className="w-5 h-5 text-yellow-600 ml-0.5" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Info */}
+                <div className="flex-1 text-left">
+                  <h3 className="text-white font-bold text-lg group-hover:text-yellow-300 transition-colors">
+                    golden hour
+                  </h3>
+                  <p className="text-white/70 text-sm mt-1 group-hover:text-white/80 transition-colors">
+                    JVKE
+                  </p>
+                  <div className="flex items-center gap-2 mt-2">
+                    <span className="text-xs text-yellow-300/100 bg-yellow-400/10 px-2 py-1 rounded-full border border-yellow-400/20">
+                      🎵 Popular
+                    </span>
+                    <span className="text-xs text-white/70">
+                      YouTube
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Glow effect */}
+              <div className="absolute -inset-px bg-gradient-to-br from-yellow-500/0 to-orange-600/0 group-hover:from-yellow-500/20 group-hover:to-orange-600/20 rounded-2xl blur-xl transition-all duration-500 -z-10" />
+            </div>
+
+          </div>
+
           <button
             onClick={() => setIsImporterOpen(true)}
             className="w-full px-6 py-3 bg-primary text-white font-semibold rounded-xl hover:bg-primary/90 transition flex items-center justify-center gap-2"
