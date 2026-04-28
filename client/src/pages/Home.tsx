@@ -1,4 +1,3 @@
-// app/page.tsx (hoặc Home.tsx)
 import { useState, useEffect } from "react";
 import MusicPlayer, { Song } from "@/components/MusicPlayer";
 import SongImporter from "@/components/SongImporter";
@@ -51,6 +50,9 @@ const deleteAudioFile = async (id: number) => {
 export default function Home() {
   const [songs, setSongs] = useState<Song[]>([]);
   const [isImporterOpen, setIsImporterOpen] = useState(false);
+  
+  // STATE MỚI: Để quyết định xem bài đầu tiên có được tự động phát không
+  const [autoPlayFirstSong, setAutoPlayFirstSong] = useState(false);
 
   // Load songs from localStorage AND IndexedDB on mount
   useEffect(() => {
@@ -101,6 +103,14 @@ export default function Home() {
   };
 
   const handleAddSongs = (newSongs: Song[]) => {
+    // KIỂM TRA: Nếu danh sách đang trống -> đánh dấu đây là lần thêm bài đầu tiên -> cho phép Play luôn
+    if (songs.length === 0) {
+      setAutoPlayFirstSong(true);
+    } else {
+      // Đặt lại false nếu người dùng thêm bài khi playlist đã có nhạc (để không phá vỡ logic bài đang hát)
+      setAutoPlayFirstSong(false);
+    }
+
     // 1. Lưu file MP3 vào IndexedDB
     newSongs.forEach((song) => {
       if (song.type === "local" && song.file) {
@@ -147,7 +157,7 @@ export default function Home() {
       youtubeId: "PEM0Vs8jf1w",
     };
 
-    setIsImporterOpen(false);
+    // Hàm handleAddSongs đã tự động lo việc bật cờ autoPlayFirstSong
     handleAddSongs([suggestedSong]);
   };
 
@@ -242,7 +252,13 @@ export default function Home() {
               Xóa tất cả
             </button>
           </div>
-          <MusicPlayer songs={songs} onRemoveSong={handleRemoveSong} />
+          
+          {/* TRUYỀN autoPlayFirst VÀO ĐÂY NÈ CẬU */}
+          <MusicPlayer 
+            songs={songs} 
+            onRemoveSong={handleRemoveSong} 
+            autoPlayFirst={autoPlayFirstSong} 
+          />
         </div>
       )}
 

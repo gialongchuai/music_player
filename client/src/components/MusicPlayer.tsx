@@ -37,6 +37,7 @@ export interface Song {
 interface MusicPlayerProps {
   songs: Song[];
   onRemoveSong: (songId: number) => void;
+  autoPlayFirst?: boolean; // <--- 1. THÊM DÒNG NÀY
 }
 
 // Load YouTube API (only once)
@@ -57,7 +58,7 @@ const loadYouTubeAPI = () => {
   };
 };
 
-export default function MusicPlayer({ songs, onRemoveSong }: MusicPlayerProps) {
+export default function MusicPlayer({ songs, onRemoveSong, autoPlayFirst }: MusicPlayerProps) {
   const [currentSongIndex, setCurrentSongIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -78,8 +79,8 @@ export default function MusicPlayer({ songs, onRemoveSong }: MusicPlayerProps) {
   const isRepeatRef = useRef(isRepeat);
   const isShuffleRef = useRef(isShuffle);
 
-  // Thêm ref này vào cùng chỗ với audioRef, playerRef...
-  const shouldAutoPlayRef = useRef(false);
+  // 3. SỬA DÒNG NÀY: Lấy giá trị từ prop truyền vào thay vì mặc định là false
+  const shouldAutoPlayRef = useRef(autoPlayFirst || false);
 
   // Volume control refs
   const volumeWrapperRef = useRef<HTMLDivElement>(null);
