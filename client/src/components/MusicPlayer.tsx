@@ -31,16 +31,15 @@ export interface Song {
   duration: string;
   type?: "local" | "youtube";
   youtubeId?: string;
-  file?: Blob; // <--- THÊM DÒNG NÀY: Để truyền file từ Importer sang Home
+  file?: Blob;
 }
 
 interface MusicPlayerProps {
   songs: Song[];
   onRemoveSong: (songId: number) => void;
-  autoPlayFirst?: boolean; // <--- 1. THÊM DÒNG NÀY
+  autoPlayFirst?: boolean;
 }
 
-// Load YouTube API (only once)
 const loadYouTubeAPI = () => {
   if (window.YT && window.YT.Player) {
     window.ytApiReady = true;
@@ -69,85 +68,57 @@ export default function MusicPlayer({ songs, onRemoveSong, autoPlayFirst }: Musi
   const [isShuffle, setIsShuffle] = useState(false);
   const [showPlaylist, setShowPlaylist] = useState(false);
 
-  // Refs
   const audioRef = useRef<HTMLAudioElement>(null);
   const playerRef = useRef<any>(null);
   const playerContainerRef = useRef<HTMLDivElement>(null);
   const intervalRef = useRef<any>(null);
 
-  // Ref để lưu trạng thái Repeat/Shuffle (Fix lỗi Stale Closure)
   const isRepeatRef = useRef(isRepeat);
   const isShuffleRef = useRef(isShuffle);
-
-  // 3. SỬA DÒNG NÀY: Lấy giá trị từ prop truyền vào thay vì mặc định là false
   const shouldAutoPlayRef = useRef(autoPlayFirst || false);
 
-  // Volume control refs
   const volumeWrapperRef = useRef<HTMLDivElement>(null);
   const [isVolumeFocused, setIsVolumeFocused] = useState(false);
   const [isVolumeAdjustMode, setIsVolumeAdjustMode] = useState(false);
 
-  // Lấy bài hát hiện tại một cách an toàn
+  // --- FIX STALE CLOSURE CHÍNH LÀ ĐÂY ---
+  // Tạo ref để lưu trữ các hàm xử lý mới nhất, giúp YouTube API không bị kẹt ở state cũ
+  const latestHandleSongEnd = useRef<(() => void) | undefined>(undefined);
+  const latestHandleNext = useRef<(() => void) | undefined>(undefined);
+
   const currentSong = songs[currentSongIndex] || {};
 
-  // -------------------------------------------------------
-  // THÊM ĐOẠN NÀY VÀO: Xử lý phím SPACE để Play/Pause
-  // -------------------------------------------------------
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Chỉ bắt phím Space
       if (e.code === "Space") {
-        // 1. Kiểm tra xem người dùng có đang gõ chữ trong ô Input nào không?
-        // Nếu đang gõ tên bài hát hay tìm kiếm youtube thì Space phải là dấu cách, không được Pause nhạc.
         const activeTag = document.activeElement?.tagName.toUpperCase();
         if (activeTag === "INPUT" || activeTag === "TEXTAREA") {
           return;
         }
-
-        // 2. Chặn hành động cuộn trang mặc định của phím Space
         e.preventDefault();
-
-        // 3. Đảo ngược trạng thái Play/Pause
-        // Sử dụng functional update (prev => !prev) để luôn lấy giá trị mới nhất mà không cần thêm dependency
         setIsPlaying(prev => !prev);
       }
     };
-
-    // Lắng nghe sự kiện trên toàn bộ cửa sổ
     window.addEventListener("keydown", handleKeyDown);
-
-    // Dọn dẹp khi component unmount
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
-  // -------------------------------------------------------
 
-  // --- LOGIC MỚI: SYNC INDEX KHI THÊM/XÓA BÀI ---
   const currentSongIdRef = useRef<number | null>(null);
-
-  // 1. Cập nhật ID bài hát hiện tại vào Ref
   useEffect(() => {
     if (currentSong.id) {
       currentSongIdRef.current = currentSong.id;
     }
   }, [currentSongIndex, songs]);
 
-  // 2. Khi danh sách songs thay đổi (thêm/xóa), tìm lại vị trí của bài đang hát
   useEffect(() => {
     if (currentSongIdRef.current !== null) {
       const newIndex = songs.findIndex(s => s.id === currentSongIdRef.current);
-      // Nếu bài hát vẫn còn trong list nhưng index đã đổi -> cập nhật index mới
       if (newIndex !== -1 && newIndex !== currentSongIndex) {
         setCurrentSongIndex(newIndex);
       }
-      // Lưu ý: Nếu newIndex === -1 (bài đang hát bị xóa), logic render sẽ tự handle hoặc crash nhẹ,
-      // nhưng thường ta không xóa bài đang hát hoặc chấp nhận nó dừng.
     }
-  }, [songs]); // Dependency chỉ là songs
-  // -----------------------------------------------
+  }, [songs]);
 
-  // Sync Refs
   useEffect(() => {
     isRepeatRef.current = isRepeat;
   }, [isRepeat]);
@@ -155,7 +126,6 @@ export default function MusicPlayer({ songs, onRemoveSong, autoPlayFirst }: Musi
     isShuffleRef.current = isShuffle;
   }, [isShuffle]);
 
-  // Volume Wheel Logic
   useEffect(() => {
     if (!isVolumeAdjustMode) return;
     const handleWheel = (e: WheelEvent) => {
@@ -200,31 +170,22 @@ export default function MusicPlayer({ songs, onRemoveSong, autoPlayFirst }: Musi
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Load API
   useEffect(() => {
     loadYouTubeAPI();
   }, []);
 
-  // --- MAIN PLAYER EFFECT (Đã fix dependency để không reload khi thêm bài) ---
-  // --- MAIN PLAYER EFFECT ---
   useEffect(() => {
     if (!currentSong.id) return;
 
-    // 1. LẤY TRẠNG THÁI TỪ REF ĐỂ QUYẾT ĐỊNH
     const shouldPlay = shouldAutoPlayRef.current;
-    setIsPlaying(shouldPlay); // Cập nhật icon Play/Pause theo đúng ý định
+    setIsPlaying(shouldPlay);
     setCurrentTime(0);
-
-    // Reset lại ref về false cho an toàn (mặc định là không hát nếu không có lệnh)
-    // Hoặc giữ nguyên cũng được, nhưng reset giúp tránh lỗi logic lạ sau này.
-    // shouldAutoPlayRef.current = false; // (Optional: Có thể bỏ dòng này nếu muốn Next xong bấm Next tiếp vẫn hát)
 
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
       intervalRef.current = null;
     }
 
-    // 2. DỪNG NGUỒN CŨ
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
@@ -236,8 +197,6 @@ export default function MusicPlayer({ songs, onRemoveSong, autoPlayFirst }: Musi
       playerRef.current.pauseVideo();
     }
 
-    // 3. LOAD BÀI MỚI
-    // CASE A: YOUTUBE
     if (currentSong.type === "youtube" && currentSong.youtubeId) {
       if (
         playerRef.current &&
@@ -246,7 +205,7 @@ export default function MusicPlayer({ songs, onRemoveSong, autoPlayFirst }: Musi
         try {
           playerRef.current.loadVideoById(currentSong.youtubeId);
           if (shouldPlay)
-            playerRef.current.playVideo(); // <--- Dùng biến shouldPlay
+            playerRef.current.playVideo();
           else playerRef.current.pauseVideo();
         } catch (e) {
           playerRef.current.destroy();
@@ -256,14 +215,12 @@ export default function MusicPlayer({ songs, onRemoveSong, autoPlayFirst }: Musi
         createYouTubePlayer(currentSong.youtubeId, shouldPlay);
       }
     }
-    // CASE B: LOCAL MP3
     else if (audioRef.current) {
       audioRef.current.src = currentSong.url;
       audioRef.current.load();
       setDuration(0);
 
       if (shouldPlay) {
-        // <--- Dùng biến shouldPlay
         audioRef.current.play().catch(e => {
           console.error("Auto-play blocked:", e);
           setIsPlaying(false);
@@ -271,9 +228,7 @@ export default function MusicPlayer({ songs, onRemoveSong, autoPlayFirst }: Musi
       }
     }
   }, [currentSong.id]);
-  // --------------------------------------------------------------------------
 
-  // Helper create player
   const createYouTubePlayer = (videoId: string, shouldPlay: boolean) => {
     if (!window.ytApiReady || !playerContainerRef.current) {
       setTimeout(() => createYouTubePlayer(videoId, shouldPlay), 100);
@@ -308,15 +263,16 @@ export default function MusicPlayer({ songs, onRemoveSong, autoPlayFirst }: Musi
           } else if (e.data === window.YT.PlayerState.PAUSED) {
             setIsPlaying(false);
           } else if (e.data === window.YT.PlayerState.ENDED) {
-            handleSongEnd();
+            // GỌI QUA REF ĐỂ LUÔN LẤY ĐƯỢC MẢNG `songs` MỚI NHẤT
+            latestHandleSongEnd.current?.();
           }
         },
-        onError: () => handleNext(),
+        // GỌI QUA REF 
+        onError: () => latestHandleNext.current?.(),
       },
     });
   };
 
-  // Play/Pause button trigger
   useEffect(() => {
     if (
       currentSong.type === "youtube" &&
@@ -333,7 +289,6 @@ export default function MusicPlayer({ songs, onRemoveSong, autoPlayFirst }: Musi
     }
   }, [isPlaying]);
 
-  // Volume Update
   useEffect(() => {
     if (currentSong.type === "youtube" && playerRef.current) {
       playerRef.current.setVolume?.(isMuted ? 0 : volume * 100);
@@ -360,24 +315,23 @@ export default function MusicPlayer({ songs, onRemoveSong, autoPlayFirst }: Musi
   };
 
   const handleSongEnd = () => {
-    if (isRepeatRef.current) {
-      // ... giữ nguyên logic repeat
-      // (Logic repeat vẫn cần play lại nên coi như auto play)
+    // FIX: NẾU BẬT REPEAT HOẶC CHỈ CÓ 1 BÀI TRONG PLAYLIST -> HÁT LẠI TỪ ĐẦU
+    if (isRepeatRef.current || songs.length === 1) {
       if (currentSong.type === "youtube" && playerRef.current) {
-        playerRef.current.seekTo(0);
+        playerRef.current.seekTo(0, true);
         playerRef.current.playVideo();
       } else if (audioRef.current) {
         audioRef.current.currentTime = 0;
-        audioRef.current.play();
+        audioRef.current.play().catch(() => setIsPlaying(false));
       }
     } else {
-      shouldAutoPlayRef.current = true; // <--- Hết bài tự next -> BẮT BUỘC PHẢI HÁT
+      shouldAutoPlayRef.current = true;
       handleNext();
     }
   };
 
   const handleNext = () => {
-    shouldAutoPlayRef.current = true; // <--- Bấm nút Next -> HÁT LUÔN
+    shouldAutoPlayRef.current = true;
     if (isShuffleRef.current) {
       setCurrentSongIndex(Math.floor(Math.random() * songs.length));
     } else {
@@ -386,10 +340,14 @@ export default function MusicPlayer({ songs, onRemoveSong, autoPlayFirst }: Musi
   };
 
   const handlePrev = () => {
-    shouldAutoPlayRef.current = true; // <--- Bấm nút Prev -> HÁT LUÔN
+    shouldAutoPlayRef.current = true;
     if (currentTime > 3) handleSeek([0]);
     else setCurrentSongIndex(prev => (prev - 1 + songs.length) % songs.length);
   };
+
+  // Cập nhật các ref mỗi khi render để đảm bảo YouTube API luôn gọi hàm với state mới nhất
+  latestHandleSongEnd.current = handleSongEnd;
+  latestHandleNext.current = handleNext;
 
   const formatTime = (time: number) => {
     if (!time || isNaN(time)) return "0:00";
@@ -399,9 +357,7 @@ export default function MusicPlayer({ songs, onRemoveSong, autoPlayFirst }: Musi
   };
 
   return (
-    // 1. Thêm 'relative' vào div bao ngoài cùng để làm điểm neo
     <div className="flex flex-col lg:flex-row h-[85vh] w-full max-w-6xl mx-auto gap-6 p-4 lg:p-8 relative">
-      {/* Ẩn MP3 player đi nếu đang là Youtube, nhưng không unmount nó */}
       <audio
         ref={audioRef}
         src={currentSong.type !== "youtube" ? currentSong.url : undefined}
@@ -411,12 +367,10 @@ export default function MusicPlayer({ songs, onRemoveSong, autoPlayFirst }: Musi
         className="hidden"
       />
 
-      {/* YouTube player container */}
       <div className="absolute top-0 left-0 w-0 h-0 opacity-0 pointer-events-none overflow-hidden -z-50">
         <div ref={playerContainerRef} />
       </div>
 
-      {/* Playlist UI */}
       <div
         className={cn(
           "glass-panel rounded-3xl flex-1 flex flex-col overflow-hidden transition-all duration-500 ease-in-out",
@@ -449,7 +403,7 @@ export default function MusicPlayer({ songs, onRemoveSong, autoPlayFirst }: Musi
             >
               <div
                 onClick={() => {
-                  shouldAutoPlayRef.current = false; // <--- QUAN TRỌNG: Đánh dấu là KHÔNG tự hát
+                  shouldAutoPlayRef.current = false;
                   setCurrentSongIndex(index);
                   setShowPlaylist(false);
                 }}
@@ -508,9 +462,7 @@ export default function MusicPlayer({ songs, onRemoveSong, autoPlayFirst }: Musi
         </div>
       </div>
 
-      {/* Player UI */}
       <div className="glass-panel rounded-3xl flex-[1.5] flex flex-col p-6 lg:p-10 relative overflow-hidden">
-        {/* ... (Giữ nguyên phần UI Player như cũ, không thay đổi gì ở đây) ... */}
         <div
           className="absolute inset-0 -z-10 opacity-30 blur-3xl transition-all duration-1000"
           style={{
@@ -558,7 +510,6 @@ export default function MusicPlayer({ songs, onRemoveSong, autoPlayFirst }: Musi
               max={duration || 100}
               step={1}
               onValueChange={handleSeek}
-              // THÊM: interactive-slider
               className="cursor-pointer interactive-slider h-5"
             />
             <div className="flex justify-between text-xs font-medium text-white/40">
@@ -638,7 +589,6 @@ export default function MusicPlayer({ songs, onRemoveSong, autoPlayFirst }: Musi
                   e.stopPropagation();
                   setIsVolumeAdjustMode(true);
                 }}
-                // THÊM: interactive-slider
                 className="w-full interactive-slider h-5"
               />
               {isVolumeAdjustMode && (
@@ -663,32 +613,23 @@ export default function MusicPlayer({ songs, onRemoveSong, autoPlayFirst }: Musi
     background: rgba(255, 255, 255, 0.2);
   }
 
-  /* --- FIX TUA CHẬM & HOVER PHỒNG TO --- */
-
-  /* 1. Thiết lập transition có chọn lọc */
-  /* Thay vì 'all', ta chỉ liệt kê những thứ cần mượt (height, transform, border) */
-  /* Tuyệt đối KHÔNG transition 'width' của thanh Range hoặc 'left' của Thumb */
   .interactive-slider span {
     transition-property: height, transform, box-shadow, border-width; 
-    transition-duration: 0.2s; /* Giảm xuống 0.2s cho nhanh hơn chút nữa */
+    transition-duration: 0.2s; 
     transition-timing-function: ease-out;
   }
 
-  /* Riêng cục Thumb (cục tròn) cần transition cả width/height để phồng to mượt */
   .interactive-slider span[role="slider"] {
     transition-property: width, height, transform, box-shadow, border;
     transition-duration: 0.2s;
     transition-timing-function: ease-out;
-    /* Quan trọng: KHÔNG transition 'left', 'right' để khi click nó nhảy ngay lập tức */
   }
 
-  /* 2. Hiệu ứng Hover cho thanh Track (Phồng lên) */
   .interactive-slider:hover span.grow {
     height: 10px !important; 
     border-radius: 999px;
   }
 
-  /* 3. Hiệu ứng Hover cho cục Thumb (To lên) */
   .interactive-slider:hover span[role="slider"] {
     width: 20px !important;
     height: 20px !important;
@@ -697,7 +638,6 @@ export default function MusicPlayer({ songs, onRemoveSong, autoPlayFirst }: Musi
     box-shadow: 0 0 10px rgba(255,255,255,0.5);
   }
   
-  /* Đảm bảo thứ tự hiển thị */
   .interactive-slider span[role="slider"] {
     z-index: 10;
   }

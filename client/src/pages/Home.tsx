@@ -247,7 +247,7 @@ export default function Home() {
             </button>
             <button
               onClick={handleClearSongs}
-              className="px-4 py-2 bg-red-500/20 text-red-200 border border-red-500/30 rounded-xl hover:bg-red-500/30 transition text-sm"
+              className="px-4 py-2 bg-red-500/40 text-white-200 border border-red-500/30 rounded-xl hover:bg-red-500/30 transition text-sm"
             >
               Xóa tất cả
             </button>
