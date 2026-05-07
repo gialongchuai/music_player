@@ -148,13 +148,13 @@ export default function Home() {
   const handleAddSuggestedSong = async () => {
     const suggestedSong: Song = {
       id: Date.now(),
-      title: "Beauty And A Beat",
-      artist: "Justin Bieber",
-      cover: "https://img.youtube.com/vi/aWkPBCF8rFU/hqdefault.jpg",
-      url: "https://www.youtube.com/embed/aWkPBCF8rFU",
+      title: "this is what falling in love feels like",
+      artist: "JVKE",
+      cover: "https://img.youtube.com/vi/BOyO8sZOaOQ/hqdefault.jpg",
+      url: "https://www.youtube.com/embed/BOyO8sZOaOQ",
       duration: "0:00",
       type: "youtube",
-      youtubeId: "aWkPBCF8rFU",
+      youtubeId: "BOyO8sZOaOQ",
     };
 
     // Hàm handleAddSongs đã tự động lo việc bật cờ autoPlayFirstSong
@@ -180,7 +180,7 @@ export default function Home() {
               ☁️ Gợi ý cho cậu nè ☁️
             </p>
 
-            {/* Card gợi ý Justin Bieber - Beauty And A Beat */}
+            {/* Card gợi ý JVKE - this is what falling in love feels like */}
             <div
               onClick={handleAddSuggestedSong}
               className="group relative bg-gradient-to-br from-yellow-500/20 to-orange-600/20 border border-yellow-500/30 rounded-2xl p-4 cursor-pointer hover:from-yellow-500/30 hover:to-orange-600/30 hover:border-yellow-400/50 hover:scale-[1.02] transition-all duration-300 hover:shadow-[0_0_30px_rgba(234,179,8,0.3)]"
@@ -189,8 +189,8 @@ export default function Home() {
                 {/* Thumbnail */}
                 <div className="relative w-20 h-20 rounded-xl overflow-hidden flex-shrink-0 shadow-lg">
                   <img
-                    src="https://img.youtube.com/vi/aWkPBCF8rFU/hqdefault.jpg"
-                    alt="Beauty And A Beat"
+                    src="https://img.youtube.com/vi/BOyO8sZOaOQ/hqdefault.jpg"
+                    alt="this is what falling in love feels like"
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                   />
                   <div className="absolute inset-0 bg-black/20 group-hover:bg-black/0 transition-colors" />
@@ -205,10 +205,10 @@ export default function Home() {
                 {/* Info */}
                 <div className="flex-1 text-left">
                   <h3 className="text-white font-bold text-lg group-hover:text-yellow-300 transition-colors">
-                    Beauty And A Beat
+                    this is what falling in love feels like
                   </h3>
                   <p className="text-white/70 text-sm mt-1 group-hover:text-white/80 transition-colors">
-                    Justin Bieber
+                    JVKE
                   </p>
                   <div className="flex items-center gap-2 mt-2">
                     <span className="text-xs text-yellow-300/100 bg-yellow-400/10 px-2 py-1 rounded-full border border-yellow-400/20">
