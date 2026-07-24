@@ -148,13 +148,13 @@ export default function Home() {
   const handleAddSuggestedSong = async () => {
     const suggestedSong: Song = {
       id: Date.now(),
-      title: "this is what falling in love feels like",
-      artist: "JVKE",
-      cover: "https://img.youtube.com/vi/BOyO8sZOaOQ/hqdefault.jpg",
-      url: "https://www.youtube.com/embed/BOyO8sZOaOQ",
+      title: "hate that i made you love me",
+      artist: "Ariana Grande",
+      cover: "https://img.youtube.com/vi/82-jTNka3uc/hqdefault.jpg",
+      url: "https://www.youtube.com/embed/82-jTNka3uc",
       duration: "0:00",
       type: "youtube",
-      youtubeId: "BOyO8sZOaOQ",
+      youtubeId: "82-jTNka3uc",
     };
 
     // Hàm handleAddSongs đã tự động lo việc bật cờ autoPlayFirstSong
@@ -171,16 +171,16 @@ export default function Home() {
             Music Player
           </h1>
           <p className="text-white/80">
-            Cậu chưa có bài hát nào. Hãy thêm bài hát bằng cách nhập URL YouTube hoặc tải lên MP3.
+            Hãy thêm bài hát bằng cách nhập URL YouTube hoặc tải lên MP3.
           </p>
-          <br />
+          {/* <br /> */}
           {/* Gợi ý bài hát */}
           <div className="space-y-3">
             <p className="text-white/80">
-              ☁️ Gợi ý cho cậu nè ☁️
+              ☁️ Gợi ý nè ☁️
             </p>
 
-            {/* Card gợi ý JVKE - this is what falling in love feels like */}
+            {/* Card gợi ý hate that i made you love me - Ariana Grande */}
             <div
               onClick={handleAddSuggestedSong}
               className="group relative bg-gradient-to-br from-yellow-500/20 to-orange-600/20 border border-yellow-500/30 rounded-2xl p-4 cursor-pointer hover:from-yellow-500/30 hover:to-orange-600/30 hover:border-yellow-400/50 hover:scale-[1.02] transition-all duration-300 hover:shadow-[0_0_30px_rgba(234,179,8,0.3)]"
@@ -189,8 +189,8 @@ export default function Home() {
                 {/* Thumbnail */}
                 <div className="relative w-20 h-20 rounded-xl overflow-hidden flex-shrink-0 shadow-lg">
                   <img
-                    src="https://img.youtube.com/vi/BOyO8sZOaOQ/hqdefault.jpg"
-                    alt="this is what falling in love feels like"
+                    src="https://img.youtube.com/vi/82-jTNka3uc/hqdefault.jpg"
+                    alt="hate that i made you love me"
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                   />
                   <div className="absolute inset-0 bg-black/20 group-hover:bg-black/0 transition-colors" />
@@ -205,10 +205,10 @@ export default function Home() {
                 {/* Info */}
                 <div className="flex-1 text-left">
                   <h3 className="text-white font-bold text-lg group-hover:text-yellow-300 transition-colors">
-                    this is what falling in love feels like
+                    hate that i made you love me
                   </h3>
                   <p className="text-white/70 text-sm mt-1 group-hover:text-white/80 transition-colors">
-                    JVKE
+                    Ariana Grande
                   </p>
                   <div className="flex items-center gap-2 mt-2">
                     <span className="text-xs text-yellow-300/100 bg-yellow-400/10 px-2 py-1 rounded-full border border-yellow-400/20">
