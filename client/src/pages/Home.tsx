@@ -148,13 +148,13 @@ export default function Home() {
   const handleAddSuggestedSong = async () => {
     const suggestedSong: Song = {
       id: Date.now(),
-      title: "hate that i made you love me",
-      artist: "Ariana Grande",
-      cover: "https://img.youtube.com/vi/82-jTNka3uc/hqdefault.jpg",
-      url: "https://www.youtube.com/embed/82-jTNka3uc",
+      title: "Shut up My Moms Calling",
+      artist: "Hotel Ugly",
+      cover: "https://img.youtube.com/vi/a24EUd0zeqI/hqdefault.jpg",
+      url: "https://www.youtube.com/embed/a24EUd0zeqI",
       duration: "0:00",
       type: "youtube",
-      youtubeId: "82-jTNka3uc",
+      youtubeId: "a24EUd0zeqI",
     };
 
     // Hàm handleAddSongs đã tự động lo việc bật cờ autoPlayFirstSong
@@ -180,7 +180,7 @@ export default function Home() {
               ☁️ Gợi ý nè ☁️
             </p>
 
-            {/* Card gợi ý hate that i made you love me - Ariana Grande */}
+            {/* Card gợi ý Shut up My Moms Calling - Hotel Ugly */}
             <div
               onClick={handleAddSuggestedSong}
               className="group relative bg-gradient-to-br from-yellow-500/20 to-orange-600/20 border border-yellow-500/30 rounded-2xl p-4 cursor-pointer hover:from-yellow-500/30 hover:to-orange-600/30 hover:border-yellow-400/50 hover:scale-[1.02] transition-all duration-300 hover:shadow-[0_0_30px_rgba(234,179,8,0.3)]"
@@ -189,8 +189,8 @@ export default function Home() {
                 {/* Thumbnail */}
                 <div className="relative w-20 h-20 rounded-xl overflow-hidden flex-shrink-0 shadow-lg">
                   <img
-                    src="https://img.youtube.com/vi/82-jTNka3uc/hqdefault.jpg"
-                    alt="hate that i made you love me"
+                    src="https://img.youtube.com/vi/a24EUd0zeqI/hqdefault.jpg"
+                    alt="Shut up My Moms Calling"
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                   />
                   <div className="absolute inset-0 bg-black/20 group-hover:bg-black/0 transition-colors" />
@@ -205,10 +205,10 @@ export default function Home() {
                 {/* Info */}
                 <div className="flex-1 text-left">
                   <h3 className="text-white font-bold text-lg group-hover:text-yellow-300 transition-colors">
-                    hate that i made you love me
+                    Shut up My Moms Calling
                   </h3>
                   <p className="text-white/70 text-sm mt-1 group-hover:text-white/80 transition-colors">
-                    Ariana Grande
+                    Hotel Ugly
                   </p>
                   <div className="flex items-center gap-2 mt-2">
                     <span className="text-xs text-yellow-300/100 bg-yellow-400/10 px-2 py-1 rounded-full border border-yellow-400/20">
